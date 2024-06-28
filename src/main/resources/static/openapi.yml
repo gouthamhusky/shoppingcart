@@ -1,0 +1,112 @@
+openapi: 3.0.1
+info:
+  title: Shopping Cart App - OpenAPI 3.0
+  description: |-
+    This is a simple backend for a Shopping Cart Application
+  version: v1
+servers:
+  - url: http://localhost:8080
+    description: Generated server url
+paths:
+  /api/v1/cart:
+    get:
+      tags:
+        - application-controller
+      operationId: getCart
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        '304':
+          description: Not modified
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseSchema'
+    post:
+      tags:
+        - application-controller
+      operationId: addToCart
+      security:
+        - basicAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cart'
+        required: true
+      responses:
+        '200':
+          description: Item added or updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseSchema'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseSchema'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseSchema'
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    Cart:
+      type: object
+      properties:
+        Items:
+          type: array
+          description: Items in the cart
+          items:
+            $ref: '#/components/schemas/Item'
+      description: Represents a cart
+    Item:
+      required:
+        - Name
+        - Quantity
+        - Price
+      type: object
+      properties:
+        Name:
+          type: string
+          description: Name of the item
+          example: Apple MacBook Pro
+        Quantity:
+          type: integer
+          description: Quantity of the item in the cart
+          format: int32
+          example: 2
+        Price:
+          type: number
+          description: Price per unit of the item
+          format: double
+          example: 1999.99
+      description: Represents an item in a cart
+    ResponseSchema:
+      properties:
+        message:
+          type: string
+          description: description of response
+        statusCode:
+          type: integer
+          description: HTTP status code
+        timestamp:
+          type: string
+          description: exact time of occurence of event in yyyy-MM-dd'T'HH:mm:ss*SSSZZZZ format
+          example: 2024-06-26T15:45:30.123-07:00

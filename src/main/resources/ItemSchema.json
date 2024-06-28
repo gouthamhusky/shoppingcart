@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "Name": {
+      "type": "string"
+    },
+    "Quantity": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "Price": {
+      "type": "number",
+      "minimum": 1.0
+    }
+  },
+  "required": [
+    "Name",
+    "Quantity",
+    "Price"
+  ]
+}
