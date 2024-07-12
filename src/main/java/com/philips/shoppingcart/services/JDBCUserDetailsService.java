@@ -32,7 +32,7 @@ public class JDBCUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         LOGGER.info("Loading user by username: " + username);
-        Optional<User> user = userService.getUserByUsername(username);
+        Optional<User> user = userService.getByUsername(username);
         user.orElseThrow(() -> new UsernameNotFoundException("Username: " + username + " not found"));
         return user.map(JDBCUserDetails::new).get();
     }

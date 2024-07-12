@@ -35,7 +35,7 @@ public class SecurityConfig {
 
     @Autowired CustomAuthenticationEntryPoint authenticationEntryPoint;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SecurityConfig.class);
 
     /**
      * Bean to authenticate users using the custom JDBCUserDetailsService and BCryptPasswordEncoder

@@ -1,4 +1,4 @@
-package com.philips.shoppingcart.controllers;
+package com.philips.shoppingcart.controllers.integration;
 
 import com.philips.shoppingcart.ShoppingcartApplication;
 import io.restassured.RestAssured;
@@ -30,7 +30,6 @@ public class ApplicationControllerTest {
 
     @BeforeAll
     public static void setup() {
-        Properties properties = new Properties();
         try{
             InputStream input = new FileInputStream("src/test/resources/test.properties");
             properties.load(input);

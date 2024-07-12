@@ -1,11 +1,13 @@
 package com.philips.shoppingcart.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.philips.shoppingcart.advices.APIExceptionHandler;
 import com.philips.shoppingcart.pojos.Cart;
 import com.philips.shoppingcart.pojos.Item;
 import com.philips.shoppingcart.pojos.ResponseSchema;
 import com.philips.shoppingcart.pojos.User;
 import com.philips.shoppingcart.services.ItemService;
+import com.philips.shoppingcart.services.RedisService;
 import com.philips.shoppingcart.services.UserService;
 import com.philips.shoppingcart.utils.GenericUtils;
 import com.philips.shoppingcart.utils.SchemaValidator;
@@ -13,12 +15,15 @@ import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -42,6 +47,12 @@ public class ApplicationController {
     @Autowired
     private GenericUtils genericUtils;
 
+    @Autowired
+    private RedisService redisService;
+
+    @Value("${cart.webapp.redis.key}")
+    private String redisHash;
+
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationController.class);
@@ -55,15 +66,20 @@ public class ApplicationController {
     @GetMapping(produces = "application/json")
     public ResponseEntity<Object> getCart(Authentication authentication, @Nullable @RequestHeader("If-None-Match") String eTag) {
         LOGGER.debug("User : + " + authentication.getName() + " authenticated successfully");
-        User user = userService.getUserByUsername(authentication.getName()).get();
+
+        User user = userService.getByUsername(authentication.getName()).get();
+        String hashFromRedis = redisService.findInHash(redisHash, String.valueOf(user.getId()));
+
+        if (hashFromRedis != null && hashFromRedis.equals(eTag)) {
+            LOGGER.info(user.getUsername() + "'s cart not modified since last fetch");
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(hashFromRedis).build();
+        }
+
         Cart cart = user.getCart();
         String hash = genericUtils.hashString(cart);
-        if (hash.equals(eTag)) {
-            LOGGER.info(user.getUsername() + "'s cart not modified since last fetch");
-            return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(hash).build();
-        }
+
         LOGGER.info("Updated cart fetched successfully for " + user.getUsername());
-        return ResponseEntity.ok().eTag(hash).body(cart);
+        return ResponseEntity.ok().body(cart);
     }
 
     /**
@@ -76,30 +92,32 @@ public class ApplicationController {
     @SneakyThrows
     @PostMapping(produces = "application/json")
     public ResponseEntity<Object> addToCart(Authentication authentication, @RequestBody String requestBody) {
-        if (authentication == null) {
-            return ResponseEntity.badRequest().build();
-        }
+        LOGGER.debug("User : + " + authentication.getName() + " authenticated successfully");
 
         schemaValidator.validate(requestBody);
         LOGGER.debug("Schema validation successful");
-        User user = userService.getUserByUsername(authentication.getName()).get();
+        User user = userService.getByUsername(authentication.getName()).get();
         Item item;
         item = OBJECT_MAPPER.readValue(requestBody, Item.class);
 
-        Optional<Item> itemInDb = itemService.getItemByName(item.getName());
+        Cart userCart = user.getCart();
+        Optional<Item> itemInDb = itemService.getByNameAndCart(item.getName(), userCart.getId());
         if (itemInDb.isEmpty()) {
-            item.setCart(user.getCart());
-            itemService.createOrUpdateItem(item);
-            user.getCart().addItem(item);
+            item.setCart(userCart);
+            itemService.createOrUpdate(item);
+            userCart.addItem(item);
             LOGGER.info("New item: " + item.getName() + " added to cart successfully");
         } else {
             Item itemToUpdate = itemInDb.get();
             itemToUpdate.setQuantity(itemToUpdate.getQuantity() + item.getQuantity());
-            itemService.createOrUpdateItem(itemToUpdate);
+            itemService.createOrUpdate(itemToUpdate);
             LOGGER.info("Item: " + item.getName() + " updated in cart successfully");
         }
+        LOGGER.info("Computing latest hash for user cart: " + user.getUsername());
+        String hash = genericUtils.hashString(userCart);
+        redisService.save(redisHash, new HashMap<>(Map.of(String.valueOf(user.getId()), hash)));
 
-        return ResponseEntity.ok(new ResponseSchema("item added to cart successfully", 200, String.valueOf(System.currentTimeMillis())));
+        // Return the response entity with etag
+        return ResponseEntity.ok().eTag(hash).body(new ResponseSchema("item added to cart successfully", 200, genericUtils.getCurrentTime()));
     }
-
 }

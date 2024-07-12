@@ -52,7 +52,7 @@ public class BootStrapper implements ApplicationListener<ApplicationReadyEvent> 
                 user.setUsername(username);
                 user.setPassword(passwordEncoder.encode(password));
                 user.setCart(new Cart());
-                userService.createOrUpdateUser(user);
+                userService.createOrUpdate(user);
 
             }
         } catch (Exception e) {

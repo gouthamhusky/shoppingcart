@@ -24,7 +24,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ApplicationController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CustomAuthenticationEntryPoint.class);
 
     /**
      * Method to intercepts unauthorized access requests and sends a response to the client

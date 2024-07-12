@@ -23,12 +23,13 @@ public class Item {
     private String name;
 
     @JsonProperty("Quantity")
-    private int quantity;
+    private Integer quantity;
 
     @JsonProperty("Price")
-    private double price;
+    private Double price;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
+    @JoinColumn(name = "cart_id")
     @JsonIgnore
     private Cart cart;
 }
