@@ -2,6 +2,8 @@ package com.philips.shoppingcart.pojos;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.philips.shoppingcart.utils.ItemSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -14,6 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Schema(description = "Represents an item in a cart")
 @NoArgsConstructor
+@JsonSerialize(using = ItemSerializer.class)
 public class Item {
 
     @Id
@@ -21,36 +24,15 @@ public class Item {
     @JsonIgnore
     private int id;
 
-    @JsonProperty("Name")
-    @Column(unique = true)
-    private String name;
-
     @JsonProperty("Quantity")
     private Integer quantity;
 
-    @JsonProperty("Price")
-    private Double price;
+    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH, CascadeType.REFRESH})
+    @JoinColumn(name = "product_id")
+    private Product product;
 
     @ManyToOne
     @JoinColumn(name = "cart_id")
     @JsonIgnore
     private Cart cart;
-
-    public Item(String name, Integer quantity, Double price){
-        this.setName(name);
-        this.setQuantity(quantity);
-        this.setPrice(price);
-    }
-
-    /**
-     * Convenience method to update fields of an item
-     * @param name new name value
-     * @param quantity new quantity value
-     * @param price new price value
-     */
-    public void updateFields(String name, Integer quantity, Double price){
-        this.setName(name);
-        this.setQuantity(quantity);
-        this.setPrice(price);
-    }
 }

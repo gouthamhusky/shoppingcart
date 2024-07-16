@@ -1,8 +1,6 @@
 package com.philips.shoppingcart.security;
 
-import com.philips.shoppingcart.controllers.ApplicationController;
 import com.philips.shoppingcart.services.JDBCUserDetailsService;
-import com.philips.shoppingcart.utils.PasswordEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

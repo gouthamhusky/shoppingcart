@@ -2,6 +2,7 @@ package com.philips.shoppingcart.advices;
 
 import com.philips.shoppingcart.exceptions.BootstrapParseException;
 import com.philips.shoppingcart.exceptions.DBInternalException;
+import com.philips.shoppingcart.exceptions.ProductNotFoundException;
 import com.philips.shoppingcart.exceptions.SchemaValidationException;
 import com.philips.shoppingcart.pojos.ResponseSchema;
 import com.philips.shoppingcart.utils.GenericUtils;
@@ -68,5 +69,16 @@ public class APIExceptionHandler {
                 utils.getCurrentTime()
         );
         return ResponseEntity.internalServerError().body(errorResponse);
+    }
+
+    @ExceptionHandler(value = ProductNotFoundException.class)
+    public ResponseEntity<ResponseSchema> productNotFoundException(ProductNotFoundException ex) {
+        metricsReporter.recordCounter(HttpStatus.BAD_REQUEST);
+        ResponseSchema errorResponse = new ResponseSchema(
+                ex.getMessage(),
+                400,
+                utils.getCurrentTime()
+        );
+        return ResponseEntity.badRequest().body(errorResponse);
     }
 }

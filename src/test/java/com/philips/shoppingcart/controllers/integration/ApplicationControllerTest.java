@@ -67,7 +67,6 @@ public class ApplicationControllerTest {
     @Test
     @Order(2)
     public void testWithEmptyCart() {
-
         Response response = given().auth().preemptive().basic(username, password).get("/api/v1/cart");
 
         assertEquals(200, response.getStatusCode());
