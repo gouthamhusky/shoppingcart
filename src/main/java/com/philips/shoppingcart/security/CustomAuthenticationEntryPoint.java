@@ -1,12 +1,14 @@
 package com.philips.shoppingcart.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.philips.shoppingcart.controllers.ApplicationController;
 import com.philips.shoppingcart.pojos.ResponseSchema;
+import com.philips.shoppingcart.utils.MetricsReporter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -22,6 +24,9 @@ import static java.lang.String.valueOf;
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
+    @Autowired
+    private MetricsReporter metricsReporter;
+
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomAuthenticationEntryPoint.class);
@@ -36,6 +41,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
         LOGGER.error("Unauthorized access: " + authException.getMessage());
+        metricsReporter.recordCounter(HttpStatus.UNAUTHORIZED);
+
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         ResponseSchema errorResponse = new ResponseSchema("login credentials not provided or is invalid", 401, valueOf(System.currentTimeMillis()));

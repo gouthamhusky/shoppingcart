@@ -1,5 +1,6 @@
 package com.philips.shoppingcart.utils;
 
+import com.philips.shoppingcart.exceptions.BootstrapParseException;
 import com.philips.shoppingcart.pojos.Cart;
 import com.philips.shoppingcart.pojos.User;
 import com.philips.shoppingcart.services.UserService;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
@@ -56,7 +58,9 @@ public class BootStrapper implements ApplicationListener<ApplicationReadyEvent> 
 
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            if (e instanceof IOException){
+                throw new BootstrapParseException("Error while parsing users.csv file ", e);
+            }
         }
     }
 }

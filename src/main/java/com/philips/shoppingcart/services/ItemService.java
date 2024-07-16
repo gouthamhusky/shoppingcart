@@ -1,6 +1,6 @@
 package com.philips.shoppingcart.services;
 
-import com.philips.shoppingcart.controllers.ApplicationController;
+import com.philips.shoppingcart.exceptions.DBInternalException;
 import com.philips.shoppingcart.pojos.Item;
 import com.philips.shoppingcart.repositories.ItemRepository;
 import jakarta.persistence.EntityManager;
@@ -51,15 +51,19 @@ public class ItemService {
                 .getSingleResult();
             return Optional.of(result);
         } catch (Exception e) {
-            if (e instanceof NoResultException || e instanceof NonUniqueResultException) {
+            if (e instanceof NoResultException) {
                 LOGGER.info("No item found with name: " + name);
                 return Optional.empty();
+            }
+            if (e instanceof NonUniqueResultException){
+                LOGGER.error("Multiple items returned, which is not expected");
+                throw new DBInternalException("Error occurred while querying the database", e);
             }
         }
         return Optional.empty();
     }
 
-    public Optional<Item> getByNameAndCart(String name, int cartID){
+    public Optional<Item> getByNameAndCart(String name, int cartID) {
         try {
             LOGGER.info("Getting item by name: " + name + " and cartID: " + cartID + " from DB");
             Item result = entityManager.createQuery("SELECT i from item i where i.name = :name and i.cart.id = :cartID", Item.class)
@@ -68,9 +72,13 @@ public class ItemService {
                     .getSingleResult();
             return Optional.of(result);
         } catch (Exception e){
-            if (e instanceof NoResultException || e instanceof NonUniqueResultException) {
-                LOGGER.info("No item found with name: " + name);
+            if (e instanceof NoResultException) {
+                LOGGER.error("No item found with name: " + name);
                 return Optional.empty();
+            }
+            if (e instanceof NonUniqueResultException){
+                LOGGER.error("Multiple items returned, which is not expected");
+                throw new DBInternalException("Error occurred while querying the database", e);
             }
         }
         return Optional.empty();

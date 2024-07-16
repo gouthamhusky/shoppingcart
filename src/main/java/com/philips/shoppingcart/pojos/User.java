@@ -20,6 +20,7 @@ public class User {
     private int id;
 
     @Nonnull
+    @Column(unique = true)
     private String username;
 
     @Nonnull
